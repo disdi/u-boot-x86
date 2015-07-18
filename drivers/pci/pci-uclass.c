@@ -294,7 +294,6 @@ int pci_auto_config_devices(struct udevice *bus)
 	     !ret && dev;
 	     ret = device_find_next_child(&dev)) {
 		struct pci_child_platdata *pplat;
-		struct pci_controller *ctlr_hose;
 
 		pplat = dev_get_parent_platdata(dev);
 		unsigned int max_bus;
@@ -302,10 +301,7 @@ int pci_auto_config_devices(struct udevice *bus)
 
 		bdf = PCI_ADD_BUS(bus->seq, pplat->devfn);
 		debug("%s: device %s\n", __func__, dev->name);
-
-		/* The root controller has the region information */
-		ctlr_hose = hose->ctlr->uclass_priv;
-		max_bus = pciauto_config_device(ctlr_hose, bdf);
+		max_bus = pciauto_config_device(hose, bdf);
 		sub_bus = max(sub_bus, max_bus);
 	}
 	debug("%s: done\n", __func__);
