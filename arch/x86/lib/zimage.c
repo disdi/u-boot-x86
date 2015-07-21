@@ -61,8 +61,10 @@ __weak unsigned install_e820_map(unsigned max_entries,
 	entries[2].addr = ISA_END_ADDRESS;
 	entries[2].size = gd->ram_size - ISA_END_ADDRESS;
 	entries[2].type = E820_RAM;
-
-	return 3;
+        entries[3].addr = CONFIG_PCIE_ECAM_BASE;
+        entries[3].size = CONFIG_PCIE_ECAM_SIZE;
+        entries[3].type = E820_RESERVED;
+	return 4;
 }
 
 static void build_command_line(char *command_line, int auto_boot)

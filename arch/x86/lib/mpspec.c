@@ -21,6 +21,8 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+static bool isa_irq_occupied[16];
+
 struct mp_config_table *mp_write_floating_table(struct mp_floating_table *mf)
 {
 	u32 mc;
@@ -243,10 +245,18 @@ static void mptable_add_isa_interrupts(struct mp_config_table *mc, int bus_isa,
 			MP_IRQ_TRIGGER_EDGE | MP_IRQ_POLARITY_HIGH,
 			bus_isa, 0, apicid, 2);
 
-	for (i = 3; i < 16; i++)
+	for (i = 3; i < 16; i++){
+		/*
+                * Do not write ISA interrupt entry if it is already occupied
+                * by the platform devices.
+                */
+                if (isa_irq_occupied[i])
+                       continue;
+
 		mp_write_intsrc(mc, MP_INT,
 				MP_IRQ_TRIGGER_EDGE | MP_IRQ_POLARITY_HIGH,
 				bus_isa, i, apicid, i);
+ 	}
 }
 
 /*
@@ -269,6 +279,14 @@ static bool check_dup_entry(struct mpc_config_intsrc *intsrc_base,
 	return (i == entry_num) ? false : true;
 }
 
+/* TODO: move this to driver model */
+__weak int mp_determine_pci_dstirq(int bus, int dev, int func, int pirq)
+{
+       /* PIRQ[A-H] are connected to I/O APIC INTPIN#16-23 */
+       return pirq + 16;
+}
+
+
 static int mptable_add_intsrc(struct mp_config_table *mc,
 			      int bus_isa, int apicid)
 {
@@ -280,9 +298,6 @@ static int mptable_add_intsrc(struct mp_config_table *mc,
 	const u32 *cell;
 	int i;
 
-	/* Legacy Interrupts */
-	debug("Writing ISA IRQs\n");
-	mptable_add_isa_interrupts(mc, bus_isa, apicid, 0);
 
 	/* Get I/O interrupt information from device tree */
 	node = fdtdec_next_compatible(blob, 0, COMPAT_INTEL_IRQ_ROUTER);
@@ -304,27 +319,38 @@ static int mptable_add_intsrc(struct mp_config_table *mc,
 
 	for (i = 0; i < count; i++) {
 		struct pirq_routing pr;
+                int bus, dev, func;
+                int dstirq;	
 
 		pr.bdf = fdt_addr_to_cpu(cell[0]);
 		pr.pin = fdt_addr_to_cpu(cell[1]);
 		pr.pirq = fdt_addr_to_cpu(cell[2]);
+                bus = PCI_BUS(pr.bdf);
+                dev = PCI_DEV(pr.bdf);
+                func = PCI_FUNC(pr.bdf);
 
 		if (check_dup_entry(intsrc_base, intsrc_entries,
-				    PCI_BUS(pr.bdf), PCI_DEV(pr.bdf), pr.pin)) {
+				    bus, dev, pr.pin)) {	
 			debug("found entry for bus %d device %d INT%c, skipping\n",
-			      PCI_BUS(pr.bdf), PCI_DEV(pr.bdf),
-			      'A' + pr.pin - 1);
+			bus, dev, 'A' + pr.pin - 1);
 			cell += sizeof(struct pirq_routing) / sizeof(u32);
 			continue;
 		}
-
-		/* PIRQ[A-H] are always connected to I/O APIC INTPIN#16-23 */
-		mp_write_pci_intsrc(mc, MP_INT, PCI_BUS(pr.bdf),
-				    PCI_DEV(pr.bdf), pr.pin, apicid,
-				    pr.pirq + 16);
+                dstirq = mp_determine_pci_dstirq(bus, dev, func, pr.pirq);
+                /*
+                 * For PIRQ which is connected to I/O APIC interrupt pin#0-15,
+                 * mark it as occupied so that we can skip it later.
+                 */
+                if (dstirq < 16)
+                        isa_irq_occupied[dstirq] = true;
+                mp_write_pci_intsrc(mc, MP_INT, bus, dev, pr.pin,
+                                   apicid, dstirq);
 		intsrc_entries++;
 		cell += sizeof(struct pirq_routing) / sizeof(u32);
 	}
+        /* Legacy Interrupts */
+        debug("Writing ISA IRQs\n");
+        mptable_add_isa_interrupts(mc, bus_isa, apicid, 0);
 
 	return 0;
 }

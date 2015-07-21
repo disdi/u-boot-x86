@@ -34,6 +34,7 @@
 #include <asm/processor.h>
 #include <asm/processor-flags.h>
 #include <asm/interrupt.h>
+#include <dm/device-internal.h>
 #include <asm/tables.h>
 #include <linux/compiler.h>
 
@@ -696,6 +697,12 @@ __weak int x86_init_cpus(void)
 #ifdef CONFIG_SMP
 	debug("Init additional CPUs\n");
 	x86_mp_init();
+#else
+        struct udevice *dev = NULL;
+
+        uclass_first_device(UCLASS_CPU, &dev);
+        if (dev)
+                device_probe(dev);
 #endif
 
 	return 0;
