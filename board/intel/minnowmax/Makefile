@@ -4,4 +4,5 @@
 # SPDX-License-Identifier:	GPL-2.0+
 #
 
-obj-y	+= minnowmax.o start.o
+obj-y	+= minnowmax.o start.o 
+obj-$(CONFIG_GENERATE_ACPI_TABLE) += acpi.o dsdt.o

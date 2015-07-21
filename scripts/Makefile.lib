@@ -297,6 +297,17 @@ _dtbinst_pre_:
 %.dtb_dtbinst_: $(obj)/%.dtb _dtbinst_pre_
 	$(call cmd,dtb_install,$(INSTALL_DTBS_PATH))
 
+# ACPI
+# ---------------------------------------------------------------------------
+quiet_cmd_acpi_c_asl= ASL     $@
+cmd_acpi_c_asl=	 \
+	$(CPP) -x assembler-with-cpp -P -o $<.tmp $<; \
+	iasl -tc -p $< -tc $<.tmp; \
+	mv $(patsubst %.asl,%.hex,$<) $@
+
+$(obj)/%.c:	$(src)/%.asl
+	$(call cmd,acpi_c_asl)
+
 # Bzip2
 # ---------------------------------------------------------------------------
 
