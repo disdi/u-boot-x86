@@ -698,11 +698,14 @@ __weak int x86_init_cpus(void)
 	debug("Init additional CPUs\n");
 	x86_mp_init();
 #else
-        struct udevice *dev = NULL;
-
-        uclass_first_device(UCLASS_CPU, &dev);
-        if (dev)
-                device_probe(dev);
+        struct udevice *dev;
+ 
+       /*
+         * This causes the cpu-x86 driver to be probed.
+         * We don't check return value here as we want to allow boards
+         * which have not been converted to use cpu uclass driver to boot.
+         */
+       uclass_first_device(UCLASS_CPU, &dev);
 #endif
 
 	return 0;

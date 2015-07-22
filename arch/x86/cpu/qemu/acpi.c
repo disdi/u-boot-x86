@@ -162,10 +162,10 @@ unsigned long acpi_fill_mcfg(unsigned long current)
         u32 reg;
 
         dev = pci_find_devices(id, 0);
-        if (!dev) 
+ 	if (dev == -1) 
                 return current;
 
-        reg = pci_read_config_dword(dev, 0x60, &reg);
+        pci_read_config_dword(dev, 0x60, &reg);
         if ((reg & 0x07) != 0x01)  // require enabled + 256MB size
                 return current;
 
