@@ -17,6 +17,9 @@ void acpi_create_fadt(struct acpi_fadt * fadt, struct acpi_facs * facs, void *ds
 	pci_dev_t bdf = PCI_BDF(0, 0x1f, 0);
 	pci_read_config_word(bdf, 0x40, &pmbase);
 
+        //wrong value of pmbase by above function. Harcoding it to correct value.
+	pmbase = 0x0600;
+
 	memset((void *) fadt, 0, sizeof(struct acpi_fadt));
 	memcpy(header->signature, "FACP", 4);
 	header->length = sizeof(struct acpi_fadt);
@@ -161,10 +164,10 @@ unsigned long acpi_fill_mcfg(unsigned long current)
 	struct pci_device_id id[] = { { 0x8086, 0x29c0 } };
         u32 reg;
 
-        dev = pci_find_devices(id, 0);
+	dev = pci_find_devices(id, 0);
  	if (dev == -1) 
                 return current;
-
+	//function does not rreach here due to wrong value of id calculated above.
         pci_read_config_dword(dev, 0x60, &reg);
         if ((reg & 0x07) != 0x01)  // require enabled + 256MB size
                 return current;
