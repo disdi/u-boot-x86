@@ -144,13 +144,13 @@ unsigned long acpi_fill_madt(unsigned long current)
         current = acpi_create_madt_lapics(current);
 
         /* Write SB800 IOAPIC, only one */
-        current += acpi_create_madt_ioapic((struct acpi_madt_ioapic *) current, 2,
-                                           IO_APIC_ADDR, 0);
+        current += acpi_create_madt_ioapic((struct acpi_madt_ioapic *) current, 2, IO_APIC_ADDR, 0);
+        current += acpi_create_madt_irqoverride((struct acpi_madt_irqoverride *) current, 0, 0, 2, 0);
+        current += acpi_create_madt_irqoverride((struct acpi_madt_irqoverride *) current, 0, 9, 9, 0xD);
+        current += acpi_create_madt_irqoverride((struct acpi_madt_irqoverride *) current, 0, 0xB, 0xB, 0xD);
+        acpi_create_madt_lapic_nmi((struct acpi_madt_lapic_nmi *)current, 0, 0, 0);
 
-        current += acpi_create_madt_irqoverride((struct acpi_madt_irqoverride *)
-                                                current, 0, 0, 2, 0);
-        current += acpi_create_madt_irqoverride((struct acpi_madt_irqoverride *)
-                                                current, 0, 9, 9, 0xF);
+	return current;
         /* 0: mean bus 0--->ISA */
         /* 0: PIC 0 */
         /* 2: APIC 2 */

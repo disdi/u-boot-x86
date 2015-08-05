@@ -379,7 +379,7 @@ unsigned long acpi_fill_mcfg(unsigned long current);
 unsigned long acpi_fill_madt(unsigned long current);
 void acpi_create_fadt(struct acpi_fadt *fadt, struct acpi_facs *facs, void *dsdt);
 int acpi_create_mcfg_mmconfig(struct acpi_mcfg_mmconfig *mmconfig, u32 base, u16 seg_nr, u8 start, u8 end);
-
+int acpi_create_madt_lapic_nmi(struct acpi_madt_lapic_nmi *lapic_nmi, u8 cpu, u16 flags, u8 lint);
 static inline uint32_t read32(const void *addr)
 {
         return *(volatile uint32_t *)addr;

@@ -123,6 +123,19 @@ int acpi_create_madt_irqoverride(struct acpi_madt_irqoverride *irqoverride,
         return irqoverride->length;
 }
 
+int acpi_create_madt_lapic_nmi(struct acpi_madt_lapic_nmi *lapic_nmi, u8 cpu,
+                                u16 flags, u8 lint)
+{
+        lapic_nmi->type = 4; /* Local APIC NMI structure */
+        lapic_nmi->length = sizeof(struct acpi_madt_lapic_nmi);
+        lapic_nmi->flags = flags; 
+        lapic_nmi->processor_id = cpu;
+        lapic_nmi->lint = lint;
+ 
+        return lapic_nmi->length;
+}
+
+
 static void acpi_create_madt(struct acpi_madt *madt)
 {
 	acpi_header_t *header = &(madt->header);
