@@ -160,20 +160,9 @@ unsigned long acpi_fill_madt(unsigned long current)
 
 unsigned long acpi_fill_mcfg(unsigned long current)
 {
-	pci_dev_t dev;
-	struct pci_device_id id[] = { { 0x8086, 0x29c0 } };
-        u32 reg;
-
-	dev = pci_find_devices(id, 0);
- 	if (dev == -1) 
-                return current;
-	//function does not rreach here due to wrong value of id calculated above.
-        pci_read_config_dword(dev, 0x60, &reg);
-        if ((reg & 0x07) != 0x01)  // require enabled + 256MB size
-                return current;
 
 	 current += acpi_create_mcfg_mmconfig((struct acpi_mcfg_mmconfig *) current,
-                                             reg & 0xf0000000, 0x0, 0x0, 255);
+                                             0xe0000000, 0x0, 0x0, 255);
 
         return current;
 }
